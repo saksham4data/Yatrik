@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-color: #f8f9fa; /* Very light gray/white background */
+  --card-bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  
+  /* RedBus inspired Blue Palette */
+  --brand-blue: #0056b3; 
+  --brand-blue-dark: #004494;
+  --header-bg: #1e222b; /* Dark theme header like RedBus */
+  
+  --border-radius-lg: 16px;
+  --border-radius-md: 8px;
+  --border-radius-sm: 4px;
+  --shadow-soft: 0 4px 12px rgba(0,0,0,0.08);
+  --font-family: 'Inter', system-ui, sans-serif;
+}
+
+body.dark-theme {
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-primary: #f0f0f0;
+  --text-secondary: #a0a0a0;
+  --brand-blue: #3399ff;
+  --brand-blue-dark: #1a75ff;
+  --header-bg: #0a0a0a;
+  --shadow-hover: 0 10px 25px rgba(0, 86, 179, 0.15);
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+input {
+  font-family: inherit;
+  outline: none;
+}
+
+/* Base utility layout container for main content */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
