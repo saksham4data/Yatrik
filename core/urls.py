@@ -15,21 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from buses import views
-from django.contrib.auth import views as auth_views
+from django.urls import path, include
+from buses import api_views
+from rest_framework.authtoken import views as auth_token_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('home/', views.home,name='home'),
-    path('about/', views.about,name='about'),
-    path('contact/', views.contact,name='contact'),
-    path('my_trackings/', views.my_trackings,name='my_trackings'),
-    path('', views.search_bus,name='search_bus'),
-    path('header/', views.header,name='header'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
-    path('user_settings/', views.user_settings,name='user_settings'),
-    path('bus_results/', views.bus_results,name='bus_results'),
-    path('bus_tracker/', views.bus_tracker,name='bus_tracker'),
+    
+    # API Endpoints
+    path('api/buses/search/', api_views.BusSearchAPIView.as_view(), name='api_search_bus'),
+    path('api/profile/', api_views.PassengerProfileAPIView.as_view(), name='api_profile'),
+    path('api/auth/login/', auth_token_views.obtain_auth_token, name='api_token_auth'),
 ]
