@@ -46,7 +46,20 @@
   border-bottom: 4px solid transparent; /* For hover active state */
 }
 
-.nav-link:hover, .nav-link.active {
+.nav-link.active {
+  color: #ffffff;
+  background-color: rgba(255,255,255,0.05);
+  border-bottom: 4px solid var(--brand-blue);
+}
+
+/* Remove active styling from the current tab if the navbar is hovered, EXCEPT if we're hovering over the active tab itself */
+.navbar-nav:hover .nav-link.active:not(:hover) {
+  color: #d1d5db;
+  background-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.nav-link:hover {
   color: #ffffff;
   background-color: rgba(255,255,255,0.05);
   border-bottom: 4px solid var(--brand-blue);

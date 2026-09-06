@@ -88,8 +88,8 @@ export default function AccountSidebar() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #333', cursor: 'pointer' }} onClick={openLoginModal}>
                 <div>
-                  <i className="fas fa-list-ul" style={{ width: '30px', color: '#ccc' }}></i>
-                  <span style={{ fontSize: '1.05rem' }}>Bookings</span>
+                  <i className="fas fa-map-marked-alt" style={{ width: '30px', color: '#ccc' }}></i>
+                  <span style={{ fontSize: '1.05rem' }}>Trackings</span>
                 </div>
                 <i className="fas fa-chevron-right" style={{ color: '#777', fontSize: '0.9rem' }}></i>
               </div>

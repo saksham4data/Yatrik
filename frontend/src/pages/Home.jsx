@@ -4,9 +4,11 @@ import { useAuthModal } from '../context/AuthModalContext'
 import heroBanner from '../assets/hero_banner.jpg'
 
 export default function Home() {
+  const [searchMode, setSearchMode] = useState('route') // 'route' or 'vehicle'
   const [source, setSource] = useState('')
   const [destination, setDestination] = useState('')
   const [date, setDate] = useState('')
+  const [vehicleNumber, setVehicleNumber] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const { openLoginModal } = useAuthModal()
@@ -21,25 +23,32 @@ export default function Home() {
   const handleSearch = (e) => {
     e.preventDefault()
     
-    // Validation
-    if (!source.trim() || !destination.trim()) {
-      setError('Please fill in both Leaving from and Going to destinations.')
-      return
-    }
+    if (searchMode === 'route') {
+      // Route Validation
+      if (!source.trim() || !destination.trim()) {
+        setError('Please fill in both Leaving from and Going to destinations.')
+        return
+      }
 
-    if (!date) {
-      setError('Please select a valid date of journey.')
-      return
-    }
+      if (!date) {
+        setError('Please select a valid date of journey.')
+        return
+      }
 
-    // Check if date is in the past
-    const selectedDate = new Date(date)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0) // reset time to start of today
-    
-    if (selectedDate < today) {
-      setError('The selected date cannot be in the past.')
-      return
+      const selectedDate = new Date(date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (selectedDate < today) {
+        setError('The selected date cannot be in the past.')
+        return
+      }
+    } else {
+      // Vehicle Number Validation
+      if (!vehicleNumber.trim()) {
+        setError('Please enter a valid vehicle number.')
+        return
+      }
     }
 
     setError('')
@@ -102,71 +111,119 @@ export default function Home() {
         border: '1px solid rgba(0,0,0,0.05)'
       }}>
         
-        <div className="search-widget-inner" style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
-          {/* From */}
-          <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px', borderRight: '1px solid #eee' }}>
-            <i className="fas fa-bus" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
-            <input 
-              type="text" 
-              placeholder="From" 
-              value={source}
-              onChange={(e) => { setSource(e.target.value); setError(''); }}
-              style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
-            />
+        <div style={{ width: '100%' }}>
+          {/* Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid #eee', marginBottom: '10px', padding: '0 20px' }}>
+            <button 
+              onClick={() => { setSearchMode('route'); setError(''); }}
+              style={{
+                background: 'transparent', border: 'none', padding: '15px 20px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
+                color: searchMode === 'route' ? 'var(--brand-blue)' : 'var(--text-secondary)',
+                borderBottom: searchMode === 'route' ? '3px solid var(--brand-blue)' : '3px solid transparent',
+                outline: 'none'
+              }}
+            >
+              Search by Route
+            </button>
+            <button 
+              onClick={() => { setSearchMode('vehicle'); setError(''); }}
+              style={{
+                background: 'transparent', border: 'none', padding: '15px 20px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
+                color: searchMode === 'vehicle' ? 'var(--brand-blue)' : 'var(--text-secondary)',
+                borderBottom: searchMode === 'vehicle' ? '3px solid var(--brand-blue)' : '3px solid transparent',
+                outline: 'none'
+              }}
+            >
+              Search by Vehicle Number
+            </button>
           </div>
 
-          {/* Icon Separator */}
-          <div 
-            onClick={handleSwap}
-            className="search-widget-divider" 
-            style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 -20px', zIndex: 2, border: '1px solid #eee', cursor: 'pointer', transition: 'transform 0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          >
-            <i className="fas fa-exchange-alt" style={{ color: 'var(--brand-blue)' }}></i>
-          </div>
+          {/* Inputs Row */}
+          <div style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+            
+            {searchMode === 'route' ? (
+              <div className="search-widget-inner" style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+                {/* From */}
+                <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px', borderRight: '1px solid #eee' }}>
+                  <i className="fas fa-bus" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
+                  <input 
+                    type="text" 
+                    placeholder="From" 
+                    value={source}
+                    onChange={(e) => { setSource(e.target.value); setError(''); }}
+                    style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
 
-          {/* To */}
-          <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px', borderRight: '1px solid #eee' }}>
-            <i className="fas fa-bus" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
-            <input 
-              type="text" 
-              placeholder="To" 
-              value={destination}
-              onChange={(e) => { setDestination(e.target.value); setError(''); }}
-              style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
-            />
-          </div>
+                {/* Icon Separator */}
+                <div 
+                  onClick={handleSwap}
+                  className="search-widget-divider" 
+                  style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--bg-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 -20px', zIndex: 2, border: '1px solid #eee', cursor: 'pointer', transition: 'transform 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <i className="fas fa-exchange-alt" style={{ color: 'var(--brand-blue)' }}></i>
+                </div>
 
-          {/* Date */}
-          <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px' }}>
-            <i className="fas fa-calendar-alt" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
-            <input 
-              type="date" 
-              value={date}
-              onChange={(e) => { setDate(e.target.value); setError(''); }}
-              style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
-            />
+                {/* To */}
+                <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px', borderRight: '1px solid #eee' }}>
+                  <i className="fas fa-bus" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
+                  <input 
+                    type="text" 
+                    placeholder="To" 
+                    value={destination}
+                    onChange={(e) => { setDestination(e.target.value); setError(''); }}
+                    style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
+
+                {/* Date */}
+                <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px' }}>
+                  <i className="fas fa-calendar-alt" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
+                  <input 
+                    type="date" 
+                    value={date}
+                    onChange={(e) => { setDate(e.target.value); setError(''); }}
+                    style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="search-widget-inner" style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+                <div className="search-widget-input-group" style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '15px 25px' }}>
+                  <i className="fas fa-bus-alt" style={{ color: 'var(--text-secondary)', fontSize: '1.2rem', marginRight: '15px' }}></i>
+                  <input 
+                    type="text" 
+                    placeholder="Enter Vehicle No. (e.g. RJ14PD0123)" 
+                    value={vehicleNumber}
+                    onChange={(e) => { setVehicleNumber(e.target.value); setError(''); }}
+                    style={{ background: 'transparent', border: 'none', width: '100%', fontSize: '1.1rem', fontWeight: '600', color: 'var(--text-primary)', outline: 'none' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Search Button */}
+            <button 
+              className="search-btn"
+              onClick={handleSearch}
+              style={{ 
+                background: 'var(--brand-blue)', 
+                color: 'white', 
+                padding: '0 40px', 
+                height: '60px',
+                borderRadius: '24px', 
+                fontSize: '1.2rem', 
+                fontWeight: '700', 
+                border: 'none',
+                marginLeft: '10px',
+                marginRight: '10px'
+              }}>
+              Search
+            </button>
           </div>
         </div>
-
-        {/* Search Button */}
-        <button 
-          className="search-btn"
-          onClick={handleSearch}
-          style={{ 
-            background: 'var(--brand-blue)', 
-            color: 'white', 
-            padding: '0 40px', 
-            height: '60px',
-            borderRadius: '24px', 
-            fontSize: '1.2rem', 
-            fontWeight: '700', 
-            border: 'none',
-            marginLeft: '10px'
-          }}>
-          Search
-        </button>
       </div>
       
       {/* Error Message Display */}
@@ -250,7 +307,7 @@ export default function Home() {
       </div>
 
       {/* Recent Trackings Section */}
-      <div style={{ marginTop: '120px', marginBottom: '120px' }}>
+      <div style={{ marginTop: '120px', marginBottom: '80px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <h2 style={{ fontSize: '1.8rem', fontWeight: '700' }}>Recent Trackings</h2>
           <span style={{ color: 'var(--brand-blue)', fontWeight: '600', cursor: 'pointer' }} onClick={() => openLoginModal()}>View All History</span>
@@ -289,6 +346,49 @@ export default function Home() {
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Bangalore ➔ Chennai</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}><i className="fas fa-check-circle" style={{ marginRight: '4px' }}></i> Journey Completed</div>
             </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Government Buses Section */}
+      <div style={{ marginBottom: '120px' }}>
+        <h2 style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '40px' }}>Government Buses</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+          
+          <div onClick={() => openLoginModal()} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '2px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' }}>
+              <i className="fas fa-bus" style={{ fontSize: '1.5rem', color: '#d84e55' }}></i>
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>UPSRTC</h3>
+          </div>
+
+          <div onClick={() => openLoginModal()} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '2px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' }}>
+              <i className="fas fa-bus" style={{ fontSize: '1.5rem', color: '#183c7d' }}></i>
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>RSRTC</h3>
+          </div>
+
+          <div onClick={() => openLoginModal()} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '2px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' }}>
+              <i className="fas fa-bus" style={{ fontSize: '1.5rem', color: '#0b5e28' }}></i>
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>KSRTC</h3>
+          </div>
+
+          <div onClick={() => openLoginModal()} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '2px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' }}>
+              <i className="fas fa-bus" style={{ fontSize: '1.5rem', color: '#f39c12' }}></i>
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>HRTC</h3>
+          </div>
+
+          <div onClick={() => openLoginModal()} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '30px 20px', textAlign: 'center', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#fff', border: '2px solid #eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 15px auto' }}>
+              <i className="fas fa-bus" style={{ fontSize: '1.5rem', color: '#8e44ad' }}></i>
+            </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '700' }}>MSRTC</h3>
           </div>
 
         </div>
