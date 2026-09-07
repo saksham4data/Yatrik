@@ -1,8 +1,11 @@
 import React from 'react';
 import { useAuthModal } from '../context/AuthModalContext';
 
+import { useNavigate } from 'react-router-dom';
+
 export default function AccountSidebar() {
   const { isSidebarOpen, closeSidebar, openLoginModal } = useAuthModal();
+  const navigate = useNavigate();
 
   if (!isSidebarOpen) return null;
 
@@ -86,7 +89,7 @@ export default function AccountSidebar() {
             <h4 style={{ fontSize: '1.1rem', fontWeight: '700', marginBottom: '15px', color: '#fff' }}>My details</h4>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #333', cursor: 'pointer' }} onClick={openLoginModal}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 0', borderBottom: '1px solid #333', cursor: 'pointer' }} onClick={() => { navigate('/account_trackings'); closeSidebar(); }}>
                 <div>
                   <i className="fas fa-map-marked-alt" style={{ width: '30px', color: '#ccc' }}></i>
                   <span style={{ fontSize: '1.05rem' }}>Trackings</span>

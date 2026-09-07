@@ -52,8 +52,11 @@ export default function Home() {
     }
 
     setError('')
-    // Since user isn't logged in, pop open the login modal
-    openLoginModal()
+    if (searchMode === 'route') {
+      navigate('/search')
+    } else {
+      navigate('/my_trackings')
+    }
   }
 
   const handleBusClick = () => {
@@ -123,7 +126,7 @@ export default function Home() {
                 outline: 'none'
               }}
             >
-              Search by Route
+              Find Buses
             </button>
             <button 
               onClick={() => { setSearchMode('vehicle'); setError(''); }}
@@ -134,7 +137,7 @@ export default function Home() {
                 outline: 'none'
               }}
             >
-              Search by Vehicle Number
+              Track Bus
             </button>
           </div>
 
