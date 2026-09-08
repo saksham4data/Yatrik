@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuthModal } from '../context/AuthModalContext';
+import { supabase } from '../supabaseClient';
 
 export default function LoginModal() {
   const { isLoginModalOpen, closeLoginModal } = useAuthModal();
@@ -7,6 +8,14 @@ export default function LoginModal() {
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [signUpStep, setSignUpStep] = useState(1); // 1: Details, 2: OTP, 3: Password
   
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  
+  // Password Visibility State
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   // Login State
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,17 +24,122 @@ export default function LoginModal() {
   const [suName, setSuName] = useState('');
   const [suAge, setSuAge] = useState('');
   const [suSex, setSuSex] = useState('');
-  const [suMobile, setSuMobile] = useState('');
   const [suEmail, setSuEmail] = useState('');
+  
+  // OTP State (Simulated)
+  const [generatedOtp, setGeneratedOtp] = useState('');
   const [suOtp, setSuOtp] = useState('');
+
+  // Password State
   const [suPassword, setSuPassword] = useState('');
   const [suConfirmPassword, setSuConfirmPassword] = useState('');
 
   if (!isLoginModalOpen) return null;
 
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setSuName('');
+    setSuAge('');
+    setSuSex('');
+    setSuEmail('');
+    setSuOtp('');
+    setSuPassword('');
+    setSuConfirmPassword('');
+    setSignUpStep(1);
+    setErrorMsg('');
+  };
+
+  const handleClose = () => {
+    resetForm();
+    closeLoginModal();
+  };
+
   const handleToggleMode = () => {
     setIsSignUpMode(!isSignUpMode);
-    setSignUpStep(1); // Reset steps when toggling
+    setSignUpStep(1);
+    setErrorMsg('');
+  };
+
+  const handleLogin = async () => {
+    setErrorMsg('');
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMsg("Invalid login credentials. Please try again.");
+    } else {
+      handleClose();
+    }
+    setLoading(false);
+  };
+
+  const handleSendOtp = () => {
+    if (!suName || !suAge || !suSex || !suEmail) {
+      setErrorMsg("Please fill all details");
+      return;
+    }
+    setErrorMsg('');
+    // Simulate OTP generation
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    // Display OTP as a popup message (as requested by user)
+    alert(`Your Simulated OTP is: ${otp}\n\n(In production, this would be emailed to ${suEmail})`);
+    setSignUpStep(2);
+  };
+
+  const handleVerifyOtp = () => {
+    if (suOtp !== generatedOtp) {
+      setErrorMsg("Invalid OTP. Please try again.");
+      return;
+    }
+    setErrorMsg('');
+    setSignUpStep(3);
+  };
+
+  const handleSignup = async () => {
+    if (suPassword !== suConfirmPassword) {
+      setErrorMsg("Passwords do not match");
+      return;
+    }
+    
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      // 1. Create Supabase Auth User
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email: suEmail,
+        password: suPassword,
+      });
+
+      if (signUpError) throw signUpError;
+
+      // 2. Insert into passenger_profiles
+      if (data.user) {
+        const { error: profileError } = await supabase.from('passenger_profiles').insert({
+          user_id: data.user.id,
+          email: suEmail,
+          // Extract name parts if needed, or assume full name mapping 
+          // (Backend schema has email, address, phone. We'll skip missing ones for now)
+        });
+        
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          // Don't block login if profile fails slightly, but log it
+        }
+      }
+
+      alert("Signup successful! You are now logged in.");
+      handleClose();
+    } catch (err) {
+      setErrorMsg(err.message || "An error occurred during signup.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderLoginForm = () => (
@@ -50,46 +164,32 @@ export default function LoginModal() {
           <i className="fas fa-lock" style={{ color: '#ccc', width: '16px', textAlign: 'center' }}></i>
         </div>
         <input 
-          type="password" 
-          placeholder="Password (Max 6 chars)"
-          maxLength="6"
+          type={showLoginPassword ? "text" : "password"} 
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{ flex: 1, background: 'transparent', border: 'none', padding: '15px', color: 'white', fontSize: '1rem', outline: 'none' }}
         />
-      </div>
-
-      {/* Recaptcha Placeholder */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '25px' }}>
-        <div style={{ background: '#111', border: '1px solid #333', padding: '10px 15px', borderRadius: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '180px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '20px', height: '20px', border: '2px solid #555', borderRadius: '3px', background: '#222' }}></div>
-            <span style={{ fontSize: '0.8rem', color: '#ccc' }}>I'm not a robot</span>
-          </div>
-          <i className="fas fa-sync-alt" style={{ color: '#888', fontSize: '0.9rem' }}></i>
+        <div 
+          onClick={() => setShowLoginPassword(!showLoginPassword)}
+          style={{ padding: '15px', background: 'transparent', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+        >
+          <i className={`fas ${showLoginPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ color: '#888' }}></i>
         </div>
       </div>
 
+      {errorMsg && <div style={{ color: '#ff4d4f', marginBottom: '15px', fontSize: '0.9rem', textAlign: 'center' }}>{errorMsg}</div>}
+
       {/* Actions */}
-      <button style={{
-        width: '100%', backgroundColor: '#444', color: 'white', border: 'none', padding: '16px 0',
-        borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: 'pointer', marginBottom: '15px'
-      }}>
-        Continue
-      </button>
-
-      {/* Sign in with Google */}
-      <div style={{ textAlign: 'center', marginBottom: '15px', position: 'relative' }}>
-        <span style={{ background: '#222', padding: '0 10px', color: '#888', fontSize: '0.9rem', position: 'relative', zIndex: 1 }}>or</span>
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#444', zIndex: 0 }}></div>
-      </div>
-
-      <button style={{
-        width: '100%', backgroundColor: '#4285F4', color: 'white', border: 'none', padding: '12px 0',
-        borderRadius: '4px', fontSize: '1rem', fontWeight: '600', cursor: 'pointer', display: 'flex',
-        alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '20px'
-      }}>
-        <i className="fab fa-google"></i> Sign in with Google
+      <button 
+        onClick={handleLogin}
+        disabled={loading}
+        style={{
+          width: '100%', backgroundColor: '#444', color: 'white', border: 'none', padding: '16px 0',
+          borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '15px',
+          opacity: loading ? 0.7 : 1
+        }}>
+        {loading ? 'Logging in...' : 'Continue'}
       </button>
     </>
   );
@@ -124,7 +224,9 @@ export default function LoginModal() {
         style={{ width: '100%', background: 'transparent', border: '1px solid #444', borderRadius: '8px', padding: '12px 15px', color: 'white', fontSize: '1rem', outline: 'none', marginBottom: '25px' }}
       />
 
-      <button onClick={() => setSignUpStep(2)} style={{
+      {errorMsg && <div style={{ color: '#ff4d4f', marginBottom: '15px', fontSize: '0.9rem', textAlign: 'center' }}>{errorMsg}</div>}
+
+      <button onClick={handleSendOtp} style={{
         width: '100%', backgroundColor: 'var(--brand-blue)', color: 'white', border: 'none', padding: '14px 0',
         borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: 'pointer', marginBottom: '10px'
       }}>
@@ -136,7 +238,7 @@ export default function LoginModal() {
   const renderSignUpStep2 = () => (
     <>
       <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '5px' }}>Verify your identity</h3>
-      <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '0.9rem' }}>Step 2 of 3: Enter the OTP sent to your email</p>
+      <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '0.9rem' }}>Step 2 of 3: Enter the simulated OTP shown in the popup</p>
       
       <div style={{ textAlign: 'center', marginBottom: '25px' }}>
         <input 
@@ -145,7 +247,9 @@ export default function LoginModal() {
         />
       </div>
 
-      <button onClick={() => setSignUpStep(3)} style={{
+      {errorMsg && <div style={{ color: '#ff4d4f', marginBottom: '15px', fontSize: '0.9rem', textAlign: 'center' }}>{errorMsg}</div>}
+
+      <button onClick={handleVerifyOtp} style={{
         width: '100%', backgroundColor: 'var(--brand-blue)', color: 'white', border: 'none', padding: '16px 0',
         borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: 'pointer', marginBottom: '20px'
       }}>
@@ -153,7 +257,7 @@ export default function LoginModal() {
       </button>
       
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-        <span style={{ color: 'var(--brand-blue)', cursor: 'pointer', fontSize: '0.9rem' }} onClick={() => setSignUpStep(1)}>
+        <span style={{ color: 'var(--brand-blue)', cursor: 'pointer', fontSize: '0.9rem' }} onClick={() => { setSignUpStep(1); setErrorMsg(''); }}>
           Edit Details
         </span>
       </div>
@@ -163,23 +267,39 @@ export default function LoginModal() {
   const renderSignUpStep3 = () => (
     <>
       <h3 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '5px' }}>Secure your account</h3>
-      <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '0.9rem' }}>Step 3 of 3: Set your password (Max 6 chars)</p>
+      <p style={{ color: '#aaa', marginBottom: '20px', fontSize: '0.9rem' }}>Step 3 of 3: Set your password (Min 6 chars)</p>
       
-      <input 
-        type="password" placeholder="Password" maxLength="6" value={suPassword} onChange={(e) => setSuPassword(e.target.value)}
-        style={{ width: '100%', background: 'transparent', border: '1px solid #444', borderRadius: '8px', padding: '15px', color: 'white', fontSize: '1rem', outline: 'none', marginBottom: '15px' }}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #444', borderRadius: '8px', marginBottom: '15px', overflow: 'hidden' }}>
+        <input 
+          type={showSignupPassword ? "text" : "password"} placeholder="Password" value={suPassword} onChange={(e) => setSuPassword(e.target.value)}
+          style={{ flex: 1, background: 'transparent', border: 'none', padding: '15px', color: 'white', fontSize: '1rem', outline: 'none' }}
+        />
+        <div onClick={() => setShowSignupPassword(!showSignupPassword)} style={{ padding: '15px', cursor: 'pointer' }}>
+          <i className={`fas ${showSignupPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ color: '#888' }}></i>
+        </div>
+      </div>
       
-      <input 
-        type="password" placeholder="Confirm Password" maxLength="6" value={suConfirmPassword} onChange={(e) => setSuConfirmPassword(e.target.value)}
-        style={{ width: '100%', background: 'transparent', border: '1px solid #444', borderRadius: '8px', padding: '15px', color: 'white', fontSize: '1rem', outline: 'none', marginBottom: '25px' }}
-      />
+      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #444', borderRadius: '8px', marginBottom: '25px', overflow: 'hidden' }}>
+        <input 
+          type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" value={suConfirmPassword} onChange={(e) => setSuConfirmPassword(e.target.value)}
+          style={{ flex: 1, background: 'transparent', border: 'none', padding: '15px', color: 'white', fontSize: '1rem', outline: 'none' }}
+        />
+        <div onClick={() => setShowConfirmPassword(!showConfirmPassword)} style={{ padding: '15px', cursor: 'pointer' }}>
+          <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`} style={{ color: '#888' }}></i>
+        </div>
+      </div>
 
-      <button style={{
-        width: '100%', backgroundColor: '#28a745', color: 'white', border: 'none', padding: '16px 0',
-        borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: 'pointer', marginBottom: '20px'
-      }}>
-        Complete Registration
+      {errorMsg && <div style={{ color: '#ff4d4f', marginBottom: '15px', fontSize: '0.9rem', textAlign: 'center' }}>{errorMsg}</div>}
+
+      <button 
+        onClick={handleSignup} 
+        disabled={loading}
+        style={{
+          width: '100%', backgroundColor: '#28a745', color: 'white', border: 'none', padding: '16px 0',
+          borderRadius: '24px', fontSize: '1.1rem', fontWeight: '700', cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '20px',
+          opacity: loading ? 0.7 : 1
+        }}>
+        {loading ? 'Creating Account...' : 'Complete Registration'}
       </button>
     </>
   );
@@ -206,7 +326,7 @@ export default function LoginModal() {
             <h2 style={{ fontSize: '1.2rem', margin: 0, fontWeight: '700' }}>
               {isSignUpMode ? 'Sign up' : 'Login'}
             </h2>
-            <button onClick={closeLoginModal} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>
+            <button onClick={handleClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '1.5rem', cursor: 'pointer' }}>
               <i className="fas fa-times"></i>
             </button>
           </div>

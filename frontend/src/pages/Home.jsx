@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthModal } from '../context/AuthModalContext'
 import heroBanner from '../assets/hero_banner.jpg'
@@ -11,7 +11,26 @@ export default function Home() {
   const [vehicleNumber, setVehicleNumber] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const { openLoginModal } = useAuthModal()
+  const { user, openLoginModal } = useAuthModal()
+  const [recentSearches, setRecentSearches] = useState([])
+
+  // Load history tied to user when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      const saved = localStorage.getItem(`recent_searches_${user.email}`);
+      if (saved) {
+        try {
+          setRecentSearches(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse history", e);
+        }
+      } else {
+        setRecentSearches([]);
+      }
+    } else {
+      setRecentSearches([]);
+    }
+  }, [user]);
 
   const handleSwap = () => {
     const temp = source
@@ -310,49 +329,35 @@ export default function Home() {
       </div>
 
       {/* Recent Trackings Section */}
-      <div style={{ marginTop: '120px', marginBottom: '80px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: '700' }}>Recent Trackings</h2>
-          <span style={{ color: 'var(--brand-blue)', fontWeight: '600', cursor: 'pointer' }} onClick={() => openLoginModal()}>View All History</span>
-        </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+      {user && recentSearches.length > 0 && (
+        <div style={{ marginTop: '120px', marginBottom: '80px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+            <h2 style={{ fontSize: '1.8rem', fontWeight: '700' }}>Recent Searches</h2>
+            <span style={{ color: 'var(--brand-blue)', fontWeight: '600', cursor: 'pointer' }} onClick={() => navigate('/account_trackings')}>View All History</span>
+          </div>
           
-          <div onClick={handleBusClick} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', gap: '15px' }}>
-            <div style={{ background: '#e6f0fa', color: 'var(--brand-blue)', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-              <i className="fas fa-bus-alt"></i>
-            </div>
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '4px' }}>RSRTC Express</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Jaipur ➔ Delhi</div>
-              <div style={{ color: '#28a745', fontSize: '0.85rem', fontWeight: '600' }}><i className="fas fa-circle" style={{ fontSize: '0.6rem', marginRight: '4px' }}></i> On Time</div>
-            </div>
-          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            
+            {recentSearches.map((search) => (
+              <div key={search.id} onClick={() => navigate('/my_trackings')} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', gap: '15px' }}>
+                <div style={{ background: '#e6f0fa', color: 'var(--brand-blue)', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
+                  <i className={search.type === 'route' ? "fas fa-map-marker-alt" : "fas fa-bus-alt"}></i>
+                </div>
+                <div>
+                  <div style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '4px' }}>
+                    {search.type === 'route' ? `${search.from} ➔ ${search.to}` : search.busNumber}
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>
+                    {search.type === 'route' ? 'Route Search' : 'Vehicle Tracking'}
+                  </div>
+                  <div style={{ color: '#28a745', fontSize: '0.85rem', fontWeight: '600' }}><i className="fas fa-history" style={{ fontSize: '0.8rem', marginRight: '4px' }}></i> From History</div>
+                </div>
+              </div>
+            ))}
 
-          <div onClick={handleBusClick} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', gap: '15px' }}>
-            <div style={{ background: '#e6f0fa', color: 'var(--brand-blue)', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-              <i className="fas fa-bus-alt"></i>
-            </div>
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '4px' }}>VRL Travels</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Mumbai ➔ Pune</div>
-              <div style={{ color: '#ffc107', fontSize: '0.85rem', fontWeight: '600' }}><i className="fas fa-circle" style={{ fontSize: '0.6rem', marginRight: '4px' }}></i> Delayed by 15m</div>
-            </div>
           </div>
-
-          <div onClick={handleBusClick} style={{ background: 'var(--card-bg)', borderRadius: '16px', padding: '20px', boxShadow: 'var(--shadow-soft)', border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer', display: 'flex', gap: '15px' }}>
-            <div style={{ background: '#e6f0fa', color: 'var(--brand-blue)', width: '50px', height: '50px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
-              <i className="fas fa-bus-alt"></i>
-            </div>
-            <div>
-              <div style={{ fontWeight: '700', fontSize: '1.1rem', marginBottom: '4px' }}>IntrCity SmartBus</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '4px' }}>Bangalore ➔ Chennai</div>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: '600' }}><i className="fas fa-check-circle" style={{ marginRight: '4px' }}></i> Journey Completed</div>
-            </div>
-          </div>
-
         </div>
-      </div>
+      )}
 
       {/* Government Buses Section */}
       <div style={{ marginBottom: '120px' }}>

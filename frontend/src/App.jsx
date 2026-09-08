@@ -16,10 +16,7 @@ import './App.css'
 
 function App() {
   useEffect(() => {
-    // Temporary dev bypass: keep user logged in until backend is wired up
-    if (!localStorage.getItem('token')) {
-      localStorage.setItem('token', 'dev_mock_token');
-    }
+    // Real auth is now handled by AuthModalContext and Supabase
   }, []);
 
   return (

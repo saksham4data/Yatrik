@@ -5,7 +5,7 @@ import { useAuthModal } from '../context/AuthModalContext'
 export default function Header() {
   const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const { openSidebar } = useAuthModal()
+  const { openSidebar, user } = useAuthModal()
   
   // Theme logic
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -71,9 +71,23 @@ export default function Header() {
           <Link to="/contact" className="nav-action">
             <i className="fas fa-question-circle"></i> Help
           </Link>
-          <button onClick={openSidebar} className="nav-action" style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}>
-            <i className="fas fa-user-circle"></i> Account
-          </button>
+          
+          {user ? (
+            <button onClick={openSidebar} className="nav-action" style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#444', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', overflow: 'hidden' }}>
+                {localStorage.getItem(`avatar_${user.email}`) ? (
+                  <img src={localStorage.getItem(`avatar_${user.email}`)} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <i className="fas fa-user"></i>
+                )}
+              </div>
+              <span style={{ fontWeight: '600' }}>{user.email.split('@')[0]}</span>
+            </button>
+          ) : (
+            <button onClick={openSidebar} className="nav-action" style={{ background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer' }}>
+              <i className="fas fa-user-circle"></i> Account
+            </button>
+          )}
         </div>
 
         {/* Mobile Hamburger Toggle */}

@@ -15,7 +15,7 @@ export default function TrackMyBus() {
   const [searchResults, setSearchResults] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const { openLoginModal } = useAuthModal();
+  const { user, openLoginModal } = useAuthModal();
 
   useEffect(() => {
     // Current time
@@ -24,18 +24,24 @@ export default function TrackMyBus() {
       setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     }, 1000);
     
-    // Load history from session storage
-    const saved = sessionStorage.getItem('recent_bus_searches');
-    if (saved) {
-      try {
-        setRecentSearches(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
+    // Load history from local storage tied to user
+    if (user) {
+      const saved = localStorage.getItem(`recent_searches_${user.email}`);
+      if (saved) {
+        try {
+          setRecentSearches(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse history", e);
+        }
+      } else {
+        setRecentSearches([]);
       }
+    } else {
+      setRecentSearches([]);
     }
 
     return () => clearInterval(timer);
-  }, []);
+  }, [user]);
 
   const handleSwap = () => {
     const temp = source;
@@ -43,26 +49,31 @@ export default function TrackMyBus() {
     setDestination(temp);
   };
 
+  const saveSearchToHistory = (newSearch) => {
+    if (!user) return;
+    const currentSearches = JSON.parse(localStorage.getItem(`recent_searches_${user.email}`) || '[]');
+    const updated = [newSearch, ...currentSearches].slice(0, 5); // keep max 5
+    setRecentSearches(updated);
+    localStorage.setItem(`recent_searches_${user.email}`, JSON.stringify(updated));
+  };
+
   const handleRouteSearch = async () => {
     if (!source.trim() || !destination.trim()) return;
     
     const token = localStorage.getItem('token');
     
+    if (!token || !user) {
+      openLoginModal();
+      return;
+    }
+
     // Save to history
-    const newSearch = {
+    saveSearchToHistory({
       id: Date.now(),
       type: 'route',
       from: source,
       to: destination
-    };
-    const updated = [newSearch, ...recentSearches].slice(0, 5); // keep max 5
-    setRecentSearches(updated);
-    sessionStorage.setItem('recent_bus_searches', JSON.stringify(updated));
-
-    if (!token) {
-      openLoginModal();
-      return;
-    }
+    });
 
     setLoading(true);
     try {
@@ -145,20 +156,23 @@ export default function TrackMyBus() {
   const handleVehicleSearch = () => {
     if (!busNumber.trim()) return;
     
-    const newSearch = {
+    if (!user) {
+      openLoginModal();
+      return;
+    }
+
+    saveSearchToHistory({
       id: Date.now(),
       type: 'vehicle',
       busNumber: busNumber
-    };
-    
-    const updated = [newSearch, ...recentSearches].slice(0, 5);
-    setRecentSearches(updated);
-    sessionStorage.setItem('recent_bus_searches', JSON.stringify(updated));
+    });
   };
 
   const handleClearHistory = () => {
     setRecentSearches([]);
-    sessionStorage.removeItem('recent_bus_searches');
+    if (user) {
+      localStorage.removeItem(`recent_searches_${user.email}`);
+    }
   };
 
   return (

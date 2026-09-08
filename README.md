@@ -1,80 +1,85 @@
-# Yatrik - Live Bus Tracking Platform
+# Yatrik (Grey_Bus) - Your Complete Bus Companion
 
-Yatrik (formerly Grey Bus) is India's most advanced and reliable live bus tracking platform. Born out of the frustration of waiting at bus stops with no information, Yatrik brings transparency, safety, and predictability to millions of daily commuters.
+Yatrik is a full-stack platform providing real-time bus tracking, route searching, and schedule management. It is built using a modern **Three-Tier Architecture** utilizing React, Node.js (Express), and Supabase (PostgreSQL).
 
-## Features
+## 🚀 Tech Stack
 
-- **Live Bus Tracking:** Connects directly to hardware GPS modules for flawless, continuous real-time tracking (10-20m accuracy, 10s updates).
-- **Search by Route or Vehicle:** Easily look up your bus by Source/Destination or directly by Vehicle Number.
-- **Smart Alerts & Safety:** Get notified instantly if your bus is delayed, taking a detour, or approaching your boarding point. Share live tracking links with family.
-- **Government Official Partner:** Officially integrated with major State Road Transport Corporations (UPSRTC, RSRTC, KSRTC, HRTC, MSRTC, etc.).
-- **User Dashboard:** Seamlessly track active trips, review past journey history, and bookmark your favorite daily routes or buses.
-- **Modern UI / Dark Mode:** A premium, ad-free UI designed for modern devices, featuring native dark mode support to save battery during night travels.
+### Frontend
+- **Framework:** React + Vite
+- **Routing:** React Router v6
+- **Styling:** Vanilla CSS (Dark Theme, Glassmorphism)
+- **State & Auth:** React Context + Supabase Auth
+- **Icons:** FontAwesome
 
-## Tech Stack
-
-- **Frontend:** React (Vite), React Router, Context API, Vanilla CSS.
-- **Backend:** Django, Django REST Framework (DRF).
-
-## Project Structure
-
-- `frontend/`: The React-based SPA (Single Page Application) frontend.
-- `core/`: The main Django project configuration.
-- `buses/`: The Django app handling buses, schedules, routes, and passenger tracking logic.
-- `data/`: Mock data or fixtures.
+### Backend
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **Database:** Supabase (PostgreSQL)
+- **Security:** Row Level Security (RLS) + JWT Auth
 
 ---
 
-## Setup Instructions
+## 🛠️ Project Setup
 
-### 1. Backend (Django)
+### 1. Database Configuration (Supabase)
+1. Create a new Supabase project.
+2. In the Supabase SQL Editor, copy and run the contents of `backend/supabase_schema.sql` to generate the necessary tables, relationships, and RLS policies.
+3. Obtain your `Project URL` and `anon public key` from the API Settings.
 
-1. **Create and activate a virtual environment:**
-   On Windows:
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\activate
-   ```
-   On macOS/Linux:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+### 2. Backend Setup
+Navigate to the backend directory and install dependencies:
+```bash
+cd backend
+npm install
+```
 
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Create a `.env` file in the `backend/` directory:
+```env
+SUPABASE_URL=your_project_url
+SUPABASE_ANON_KEY=your_anon_key
+PORT=5000
+```
 
-3. **Apply database migrations:**
-   ```bash
-   python manage.py migrate
-   ```
+Seed the database with initial CSV data (Buses, Stops, Locations):
+```bash
+node scripts/seed.js
+```
 
-4. **Run the development server:**
-   ```bash
-   python manage.py runserver
-   ```
-   *The Django backend will be available at `http://127.0.0.1:8000/`.*
+Start the Express API server:
+```bash
+npm start
+```
+*(The server will run on `http://localhost:5000`)*
 
-### 2. Frontend (React + Vite)
+### 3. Frontend Setup
+Open a new terminal, navigate to the frontend directory, and install dependencies:
+```bash
+cd frontend
+npm install
+```
 
-1. **Navigate to the frontend directory:**
-   ```bash
-   cd frontend
-   ```
+Create a `.env.local` file in the `frontend/` directory for authentication and Supabase integration:
+```env
+VITE_SUPABASE_URL=your_project_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
 
-2. **Install Node dependencies:**
-   ```bash
-   npm install
-   ```
+Start the Vite development server:
+```bash
+npm run dev
+```
+*(The React app will be available at `http://localhost:5173`)*
 
-3. **Run the Vite development server:**
-   ```bash
-   npm run dev
-   ```
-   *The React frontend will be available at `http://localhost:5173/`.*
+---
 
-## Authentication Flow
+## 🔑 Key Features
+- **Dynamic Route Searching:** Search for available buses between any source and destination city.
+- **Real-Time Data:** View exact geographical coordinates and latest updated timestamps for your favorite buses.
+- **User Authentication:** Fully integrated signup/login system powered by Supabase Auth with simulated OTP capabilities.
+- **Persistent History:** The app tracks your recent searches securely in your local browser session.
+- **Account Management:** Log in to save tracking history and manage your personal demographic profile.
 
-Currently, the frontend uses a highly modular `AuthModalContext` to handle global authentication overlays (Sign Up, Log In, and Sidebar), seamlessly blocking protected actions (like searching for a bus without an account) and guiding the user through a customized 3-step registration wizard. Backend integration with DRF for JWT/Session auth is pending.
+---
+
+## 📄 License
+This project is open-source and available under the MIT License.
